@@ -6,11 +6,12 @@ defmodule GoulashClient.Mixfile do
       version: "0.0.1",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 0.12.5",
+      elixir: "~> 0.14.0",
       deps: deps,
-      escript_main_module: Tunnel.Cli,
-      escript_app: :goulash_client,
-      escript_name: :ts_client ]
+      escript: [
+        main_module: Tunnel.Cli,
+        app: :goulash_client,
+        name: :ts_client ] ]
   end
 
   # Configuration for the OTP application

@@ -1,6 +1,6 @@
 defmodule Goulash.Control do
-    use Application.Behaviour
-
+    use Application
+    
     def start do
         Application.start :elixir
         Application.start :goulash_control

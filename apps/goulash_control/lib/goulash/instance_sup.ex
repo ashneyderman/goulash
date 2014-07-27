@@ -1,38 +1,28 @@
 defmodule Goulash.InstanceSup do
-    use Supervisor.Behaviour
-
-    @regname Goulash.InstanceSup
-    
     @moduledoc """
-    When tests run they spawn instanes where goulash clients are 
-    spawned. The spawned representation of that instance is 
-    supervised by this module.
+    This module helps spawn multiple instances of `Goulash.InstanceServer`
     """
+    use Supervisor
 
+    ## APIs
     @doc """
-    TODO: needs docs
     """
-    #TODO - needs spec
     def start_link() do
-        :supervisor.start_link({:local, @regname}, __MODULE__, [])    
+        :supervisor.start_link({:local, __MODULE__}, __MODULE__, [])    
     end
 
     @doc """
-    TODO: needs docs
+    Add instance of `Goulash.InstanceServer` to the supervision tree.
     """
-    #TODO - needs spec
+    @spec register_new(config :: Goulash.InstanceConfig.t) ::
+        {:ok, pid()}        
     def register_new(config) do
-        :supervisor.start_child(@regname, [config])
+        :supervisor.start_child(__MODULE__, [config])
     end
 
-    # callbacks
-    @doc """
-    TODO: needs docs
-    """
-    #TODO - needs spec
+    # supervisor callbacks
     def init(args) do
-        tree = [ worker(Goulash.InstanceServer, args) ]
+        tree = [ worker(Goulash.InstanceServer, args, [restart: :temporary]) ]
         supervise tree, strategy: :simple_one_for_one
     end
-
 end

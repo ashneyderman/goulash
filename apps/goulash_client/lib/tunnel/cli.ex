@@ -2,17 +2,8 @@ defmodule Tunnel.Cli do
 
     alias Goulash.InstanceSup, as: S
     alias Goulash.InstanceServer, as: N
-    alias Goulash.InstanceServer.Config, as: InstanceConfig
-    alias Goulash.ClientBehavior.ClientConfig, as: ClientConfig
-
-    defrecord Parameters,
-        verbose: false,
-        hostname: "localhost",
-        port: 29000,
-        tunnels: 1,
-        rate: 10,
-        duration: 60,
-        interactive: false
+    alias Goulash.InstanceServer.Config, as: ICfg
+    alias Goulash.ClientBehaviour.Config, as: CCfg
 
     def main(args \\ System.argv) do
         run(args)
@@ -55,17 +46,18 @@ defmodule Tunnel.Cli do
         #IO.puts "Opts: #{opts}"
         if opts[:help] do
             usage()
-            exit(0)
+            System.halt(0)
         end
 
-        Parameters.new(opts)
+        opts
     end
 
-    def process(Parameters[] = params) do
-        session_ids = generate_session_ids(params.tunnels)
+    def process(params) do
+        tparams = struct(Tunnel.Parameters, params)
+        session_ids = generate_session_ids(tparams.tunnels)
 
-        lega_cfg = InstanceConfig.new(name: "lega_instance")
-        legb_cfg = InstanceConfig.new(name: "legb_instance")
+        lega_cfg = %ICfg{name: "lega_instance"}
+        legb_cfg = %ICfg{name: "legb_instance"}
 
         {:ok, lega_instance} = S.register_new(lega_cfg)
         {:ok, legb_instance} = S.register_new(legb_cfg)
@@ -73,24 +65,25 @@ defmodule Tunnel.Cli do
         N.start_in_vm(lega_instance)
         N.start_in_vm(legb_instance)
 
-        Enum.map(session_ids, fn(session_id) ->
-            {:ok, lega_client} = N.prep_client(
-                                    lega_instance, 
-                                    ClientConfig.new(
-                                        client_module: Tunnel.Client, 
-                                        params: params.to_keywords() ++ [session_id: session_id]))
-            {:ok, legb_client} = N.prep_client(
-                                    legb_instance, 
-                                    ClientConfig.new(
-                                        client_module: Tunnel.Client, 
-                                        params: params.to_keywords() ++ [session_id: session_id]))
-            {lega_client, legb_client} end) 
-        |> Enum.each(fn({lega_client, legb_client}) ->
-            :ok = Tunnel.Client.start(lega_client)
-            :ok = Tunnel.Client.start(legb_client)
-        end)
+        Enum.each(session_ids, fn(session_id) ->
+            {:ok, _} = N.prep_clients(
+                        lega_instance, 
+                        %CCfg{
+                            client_module: Tunnel.Client, 
+                            params: Dict.put(Map.to_list(tparams), :session_id, session_id)},
+                        1)
+            {:ok, _} = N.prep_clients(
+                        legb_instance, 
+                        %CCfg{
+                            client_module: Tunnel.Client, 
+                            params: Dict.put(Map.to_list(tparams), :session_id, session_id)},
+                        1)
+            end)
 
-        params
+        N.start_clients(lega_instance)
+        N.start_clients(legb_instance)
+        
+        tparams
     end
 
     # helpers
@@ -98,7 +91,7 @@ defmodule Tunnel.Cli do
         []
     end
     defp generate_session_ids(number) do
-        [:uuid.to_string(:uuid.uuid4()) | generate_session_ids(number-1)]
+        [:uuid.to_string(:uuid.uuid4()) ++ ':test' | generate_session_ids(number-1)]
     end
 
     defp usage() do

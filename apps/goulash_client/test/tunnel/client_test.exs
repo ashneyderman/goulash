@@ -3,27 +3,21 @@ defmodule Tunnel.ClientTest do
 
     alias Goulash.InstanceSup, as: S
     alias Goulash.InstanceServer, as: N
-    alias Goulash.InstanceServer.Config, as: InstanceConfig
-    alias Goulash.ClientBehavior.ClientConfig, as: ClientConfig
+    alias Goulash.InstanceServer.Config, as: ICfg
+    alias Goulash.ClientBehaviour.Config, as: CCfg
 
     test "Simple client creation" do
-        instance_cfg = InstanceConfig.new(name: "test1")
+        instance_cfg = %ICfg{name: "test1"}
 
         {:ok, instance} = S.register_new(instance_cfg)
         assert :inactive === N.info(instance).status
         assert :ok === N.start_in_vm(instance)
-
-        client_cfg = ClientConfig.new(client_module: Tunnel.Client, 
-                                      params: [test0: "test0", 
-                                               test1: "test1"])
+        client_cfg = %CCfg{client_module: Tunnel.Client, 
+                                  params: [test0: "test0", 
+                                           test1: "test1"]}
         {:ok, _} = N.prep_clients(instance, client_cfg, 5)
-
         clients = N.all_clients(instance)
-        assert Enum.count(clients) == 5
+        assert 5 === Enum.count(clients)
     end
-
-    
-
-
 
 end

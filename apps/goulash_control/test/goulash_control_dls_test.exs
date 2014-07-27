@@ -1,5 +1,5 @@
 defmodule GoulashControlTest do
-    use Goulash.ControlDsl 
+    #use Goulash.ControlDsl 
 
     # clients_load "15 servers load config" do
     #     spawn 15 g%"instances" do

@@ -6,12 +6,13 @@ defmodule GoulashControl.Mixfile do
       version: "0.0.1",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 0.12.5",
+      elixir: "~> 0.14.0",
       deps: deps ] ++ options(Mix.env)
   end
 
   defp options(env) when env in [:dev, :test] do
-    [exlager_level: :debug, exlager_truncation_size: 8096]
+    # [test_pattern: "goulash/*.exs"]
+    []
   end
 
   # Configuration for the OTP application
@@ -33,7 +34,7 @@ defmodule GoulashControl.Mixfile do
   # { :other, in_umbrella: true }
   defp deps do
     [
-      {:exlager, ~r".*", [github: "khia/exlager"]}
+      {:exometer, ~r".*", [github: "Feuerlabs/exometer"]}
     ]
   end
 end

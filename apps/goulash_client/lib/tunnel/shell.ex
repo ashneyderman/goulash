@@ -1,20 +1,16 @@
 defmodule Tunnel.Shell do
 
-    def start(Tunnel.Cli.Parameters[] = params) do
+    def start(%Tunnel.Parameters{} = params) do
         if params.interactive do
             interactive(params)
         else
             IO.puts "Tests are running. Will terminate in #{params.duration} seconds ..."
-            Process.send_after(Process.self(), :timesup, params.duration * 1000)
+            Process.send_after(self(), :timesup, params.duration * 1000)
             timed(params)
         end 
     end
-    def start(p) do
-        IO.puts "Tunnel.Shell.start ..."
-        IO.inspect p
-    end
 
-    def timed(Tunnel.Cli.Parameters[] = params) do
+    def timed(%Tunnel.Parameters{} = params) do
         receive do
             :timesup ->
                 IO.puts "Good bye!"
@@ -24,7 +20,7 @@ defmodule Tunnel.Shell do
         end
     end  
 
-    def interactive(Tunnel.Cli.Parameters[] = params) do
+    def interactive(%Tunnel.Parameters{} = params) do
         IO.write :standard_io, "goulash> "
         (IO.read :standard_io, :line) |> create_cmd |> run
         IO.puts ""
